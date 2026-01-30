@@ -95,14 +95,49 @@ void calc_g(double *g, double *r, double *m, long N, double eps_soft)
     }
 }
 
-void calc_g_par(double *g, double *r, double *m, long N, double eps_soft)
+double calc_en(double *r, double *v, double *m, long N, double eps_soft)
+{
+    long N3 = 3*N;
+
+    double e2 = eps_soft*eps_soft;
+
+    double kin = 0.0;
+    long i;
+    for(i=0; i<N; i++)
+    {
+        double v2 = v[3*i]*v[3*i] + v[3*i+1]*v[3*i+1] + v[3*i+2]*v[3*i+2];
+        kin += m[i] * v2;
+    }
+    kin *= 0.5;
+
+    double pot = 0.0;
+    long j;
+    for(i=0; i<N; i++)
+    {
+        for(j=0; j<i; j++)
+        {
+            double dx = r[3*j] - r[3*i];
+            double dy = r[3*j+1] - r[3*i+1];
+            double dz = r[3*j+2] - r[3*i+2];
+
+            double r = sqrt(dx*dx + dy*dy + dz*dz + e2);
+
+            pot -= m[i]*m[j] / r;
+        }
+    }
+
+    return kin + pot;
+}
+
+void calc_g_par(double *g, double *r, double *m, long N, double eps_soft,
+                int num_workers)
 {
     long N3 = 3*N;
 
     double e2 = eps_soft*eps_soft;
 
     long i;
-    #pragma omp parallel for simd
+    #pragma omp parallel for num_threads(num_workers)
     for(i=0; i<N; i++)
     {
         long idx = 3*i;
@@ -127,4 +162,45 @@ void calc_g_par(double *g, double *r, double *m, long N, double eps_soft)
             g[idx+2] += m[j] * ir3 * dz;
         }
     }
+}
+
+double calc_en_par(double *r, double *v, double *m, long N, double eps_soft,
+                   int num_workers)
+{
+    long N3 = 3*N;
+
+    double e2 = eps_soft*eps_soft;
+
+    double kin = 0.0;
+    long i;
+
+    #pragma omp parallel for reduction (+:kin) num_threads(num_workers)
+    for(i=0; i<N; i++)
+    {
+        double v2 = v[3*i]*v[3*i] + v[3*i+1]*v[3*i+1] + v[3*i+2]*v[3*i+2];
+        kin += m[i] * v2;
+    }
+    kin *= 0.5;
+
+    double pot = 0.0;
+
+    #pragma omp parallel for reduction (+:pot) num_threads(num_workers)
+    for(i=0; i<N; i++)
+    {
+        double pot_i = 0.0;
+        long j;
+        for(j=0; j<i; j++)
+        {
+            double dx = r[3*j] - r[3*i];
+            double dy = r[3*j+1] - r[3*i+1];
+            double dz = r[3*j+2] - r[3*i+2];
+
+            double r = sqrt(dx*dx + dy*dy + dz*dz + e2);
+
+            pot_i -= m[i]*m[j] / r;
+        }
+        pot += pot_i;
+    }
+
+    return kin + pot;
 }

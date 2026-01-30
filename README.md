@@ -43,17 +43,22 @@ Saving frame_000008.png
 - `nbody_numpy.py`: Truly using `numpy`. Data array is 2D: `(Nbody, 6)`. Broadcasting is used to compute forces with `for` loops. About ~40x faster than `nbody_basic`.
 - `nbody_transpose.py`: Transposes the data array to be `(6, Nbody)`, improving data locality on force calculation. About ~2x faster than `nbody_numpy`. For small systems (`Nbody <= 200`) file output dominates the run time.
 - `nbody_output.py`: Buffers output and writes HDF5 instead of txt. Marginal runtime improvement over `nbody_transpose`, file size halved.
+- `nbody_cext.py`: Performs the force and energy calculations in a C extension `cbody` (located in `src`, compile with `uv sync --reinstall`). 2x-10x faster than `nbody_output` depending in problem size, matches _rough_ theoretical expectation for single core performance.
 
 ## Performance Metrics
 
 A single force calculation between a pair of bodies requires as least 16 floating point operations (including a division and square root).  To compute the full force on all N bodies requires N(N-1)/2 force calculations.  An RK4 step requires these forces to be computed 4 times. A full RK4 timestep then contains 4 x 16 x N(N-1)/2 ~32N<sup>2</sup> floating point ops. If operations can be scheduled once per clock cycle, a 4GHz CPU *should* be able to complete an RK4 timestep in ~8 N<sup>2</sup> ns.
 
-Timing on an Apple M2 Max (~3.7 GHz)
+Timing of one RK4 step on an Apple M2 Max (~3.7 GHz).  For each value I timed the execution of the whole program and divided by the number of steps. Number of steps was chosen so each run took several seconds, and varied from 1 to 100 000. 
 
-|Code Version|N=16|N=128|N=1024|N=8192|
-|------------|----|-----|------|------|
-|`nbody_basic.py` | 3.4 ms | 140 ms | 91 s | 
-|Theoretical Target| 2.0 $\mu$s | 131 $\mu$s | 8.4 ms | 537 ms |
+|Code Version     |N=16    |N=128   |N=1024 |N=8192 |
+|-----------------|--------|--------|-------|-------|
+|`nbody_basic.py` | 2.2 ms | 140 ms | 9.1 s | 642 s |
+|`nbody_numpy.py` | 196 μs | 2.9 ms | 179 ms | 14 s |
+|`nbody_transpose.py` | 169 μs | 1.2 ms | 70 ms | 6.0 s |
+|`nbody_output.py` | 117 μs | 943 μs | 68 ms | 6.0 s |
+|`nbody_cext.py`  | 63 μs  | 215 υs | 8.9 ms | 552 ms |
+|Theoretical Target| 2.0 μs | 131 μs | 8.4 ms | 537 ms |
 
 ## Profiling a code with `cProfile`
 
