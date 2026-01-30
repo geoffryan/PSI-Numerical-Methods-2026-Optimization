@@ -46,7 +46,7 @@ Profile the nbody code.
 $ uv run python -m cProfile -o basic.prof scripts/nbody_basic.py 1.0 64 8
 ```
 
-This produces the `basic.prof` file with profiling information. It can be visualized in a (Flame Graph)[https://www.brendangregg.com/flamegraphs.html] with the `flameprof` package:
+This produces the `basic.prof` file with profiling information. It can be visualized in a [Flame Graph](https://www.brendangregg.com/flamegraphs.html) with the `flameprof` package:
 ```bash
 $ uv run flameprof basic.prof > basic.svg
 ```
