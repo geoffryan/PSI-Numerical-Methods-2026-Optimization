@@ -17,13 +17,10 @@ def evolve(t0, t1, x0, N, f, f_kwargs, filename):
 
     t = np.linspace(t0, t1, N+1)
 
-    """
     with open(filename, "a") as outfile:
         en = calc_energy(x0, **f_kwargs)
-        str_x = " ".join(["{0:e}".format(xi) for xi in x0])
+        str_x = " ".join(["{0:e}".format(xi) for xi in x0.flat])
         outfile.write("{0:d} {1:e} {2:e} {3:s}\n".format(0, t0, en, str_x))
-
-    """
 
     x = x0.copy()
 
@@ -31,13 +28,12 @@ def evolve(t0, t1, x0, N, f, f_kwargs, filename):
         dt = t[i+1] - t[i]
         print(i, t[i], dt)
         x = rk4_step(t, x, dt, f, f_kwargs)
-        """
+
         with open(filename, "a") as outfile:
             en = calc_energy(x, **f_kwargs)
-            str_x = " ".join(["{0:e}".format(xi) for xi in x])
+            str_x = " ".join(["{0:e}".format(xi) for xi in x.flat])
             outfile.write("{0:d} {1:e} {2:e} {3:s}\n"
                           .format(i, t[i+1], en, str_x))
-        """
 
 
 @profile
@@ -64,26 +60,20 @@ def calc_energy(x, m=None, eps_soft=None):
     kin = 0.0
     pot = 0.0
 
-    n = len(x) // 6
+    r = x[:, :3]
+    v = x[:, 3:]
 
-    for i in range(n):
-        ri = x[6*i: 6*i+3]
-        vi = x[6*i+3: 6*i+6]
+    kin = 0.5 * (m * (v**2).sum(axis=1)).sum()
 
-        kin += 0.5*m[i] * (vi**2).sum()
+    dr = r[None, :, :] - r[:, None, :]
+    r2 = (dr**2).sum(axis=2) + eps_soft**2
 
-        for j in range(i):
-
-            rj = x[6*j:6*j+3]
-            dr = rj - ri
-            pot += -m[i]*m[j] / np.sqrt((dr**2).sum() + eps_soft**2)
+    pot = -0.5*(m[:, None] * m[None, :] / np.sqrt(r2)).sum()
 
     return kin + pot
 
 
-def generate_init_disc(N, Rmax, aspect_ratio, Mmin, Mmax):
-
-    Mavg = 0.5*(Mmin + Mmax)
+def generate_init_disc(N, Rmax, aspect_ratio, Mtotal):
 
     Hmax = aspect_ratio * Rmax
 
@@ -91,10 +81,11 @@ def generate_init_disc(N, Rmax, aspect_ratio, Mmin, Mmax):
     r_cyl = Rmax * np.sqrt(np.random.rand(Nbody))
     phi = 2*np.pi * np.random.rand(Nbody)
 
-    M_int = Mavg * Nbody * (r_cyl/Rmax)**2
+    M_int = Mtotal * (r_cyl/Rmax)**2
     v_cyl = np.sqrt(M_int / r_cyl)
 
-    M = Mmin + (Mmax - Mmin) * np.random.rand(Nbody)
+    M = np.random.rand(Nbody)
+    M *= Mtotal / M.sum()
 
     rx = r_cyl * np.cos(phi)
     ry = r_cyl * np.sin(phi)
@@ -108,13 +99,12 @@ def generate_init_disc(N, Rmax, aspect_ratio, Mmin, Mmax):
 
 def main(tMax, Nbody, Niter):
 
-    Mmin = 1.0
-    Mmax = 10.0
+    Mtotal = 1.0
     Rmax = 100.0
     eps = 0.01
 
     M, rx, ry, rz, vx, vy, vz = generate_init_disc(
-            Nbody, Rmax, 0.1, Mmin, Mmax)
+            Nbody, Rmax, 0.1, Mtotal)
 
     x0 = np.empty((Nbody, 6))
 
@@ -135,6 +125,10 @@ def main(tMax, Nbody, Niter):
 
 
 if __name__ == "__main__":
+
+    if len(sys.argv) < 4:
+        print("usage: $ python nbody_basic.py TMAX NBODY NSTEPS")
+        sys.exit()
 
     Tmax = float(sys.argv[1])
     Nbody = int(sys.argv[2])

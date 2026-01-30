@@ -75,7 +75,7 @@ Inspect results with:
 python -m line_profiler -rmt nbody_basic.py.lprof
 ```
 
-Nicely, `kernprof` tells you how to display the results:
+Nicely, `kernprof` tells you how to display the results! Running that last line:
 ```bash
 $ uv run python -m line_profiler -rmt nbody_basic.py.lprof
 Timer unit: 1e-06 s

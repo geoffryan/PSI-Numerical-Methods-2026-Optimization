@@ -87,9 +87,7 @@ def calc_energy(x, m=None, eps_soft=None):
     return kin + pot
 
 
-def generate_init_disc(N, Rmax, aspect_ratio, Mmin, Mmax):
-
-    Mavg = 0.5*(Mmin + Mmax)
+def generate_init_disc(N, Rmax, aspect_ratio, Mtotal):
 
     Hmax = aspect_ratio * Rmax
 
@@ -97,10 +95,11 @@ def generate_init_disc(N, Rmax, aspect_ratio, Mmin, Mmax):
     r_cyl = Rmax * np.sqrt(np.random.rand(Nbody))
     phi = 2*np.pi * np.random.rand(Nbody)
 
-    M_int = Mavg * Nbody * (r_cyl/Rmax)**2
+    M_int = Mtotal * (r_cyl/Rmax)**2
     v_cyl = np.sqrt(M_int / r_cyl)
 
-    M = Mmin + (Mmax - Mmin) * np.random.rand(Nbody)
+    M = np.random.rand(Nbody)
+    M *= Mtotal / M.sum()
 
     rx = r_cyl * np.cos(phi)
     ry = r_cyl * np.sin(phi)
@@ -114,13 +113,12 @@ def generate_init_disc(N, Rmax, aspect_ratio, Mmin, Mmax):
 
 def main(tMax, Nbody, Niter):
 
-    Mmin = 1.0
-    Mmax = 10.0
+    Mtotal = 1.0
     Rmax = 100.0
     eps = 0.01
 
     M, rx, ry, rz, vx, vy, vz = generate_init_disc(
-            Nbody, Rmax, 0.1, Mmin, Mmax)
+            Nbody, Rmax, 0.1, Mtotal)
 
     x0 = np.empty(6*Nbody)
 
@@ -142,6 +140,10 @@ def main(tMax, Nbody, Niter):
 
 
 if __name__ == "__main__":
+
+    if len(sys.argv) < 4:
+        print("usage: $ python nbody_basic.py TMAX NBODY NSTEPS")
+        sys.exit()
 
     Tmax = float(sys.argv[1])
     Nbody = int(sys.argv[2])
