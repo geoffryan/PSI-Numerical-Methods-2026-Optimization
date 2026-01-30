@@ -37,6 +37,13 @@ Saving frame_000007.png
 Saving frame_000008.png
 ```
 
+## Included versions:
+
+- `nbody_basic.py`: Uses `numpy` arrays, but explicitly looping over bodies in the array. Very slow.
+- `nbody_numpy.py`: Truly using `numpy`. Data array is 2D: `(Nbody, 6)`. Broadcasting is used to compute forces with `for` loops. About ~40x faster than `nbody_basic`.
+- `nbody_transpose.py`: Transposes the data array to be `(6, Nbody)`, improving data locality on force calculation. About ~2x faster than `nbody_numpy`. For small systems (`Nbody <= 200`) file output dominates the run time.
+- `nbody_output.py`: Buffers output and writes HDF5 instead of txt. Marginal runtime improvement over `nbody_transpose`, file size halved.
+
 ## Profiling a code with `cProfile`
 
 cProfile is built in to Python and will profile a whole program.  The signature is: `python -m cProfile -o OUTPUT_FILE SCRIPT_NAME SCRIPT_ARGS...`

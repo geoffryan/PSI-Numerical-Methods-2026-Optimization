@@ -35,12 +35,34 @@ def load_the_data_h5(filename, skip):
         t = f['t'][::skip][...]
         m = f['m'][...]
         e = f['e'][::skip][...]
-        x = f['x'][::skip, 0, :, 0][...]
-        y = f['x'][::skip, 0, :, 1][...]
-        z = f['x'][::skip, 0, :, 2][...]
-        vx = f['x'][::skip, 1, :, 0][...]
-        vy = f['x'][::skip, 1, :, 1][...]
-        vz = f['x'][::skip, 1, :, 2][...]
+
+        nb = len(m)
+        nt = len(f['t'])
+
+        if f['x'].shape == (nt, 6, nb):
+            x = f['x'][::skip, 0, :][...]
+            y = f['x'][::skip, 1, :][...]
+            z = f['x'][::skip, 2, :][...]
+            vx = f['x'][::skip, 3, :][...]
+            vy = f['x'][::skip, 4, :][...]
+            vz = f['x'][::skip, 5, :][...]
+        elif f['x'].shape == (nt, nb, 6):
+            x = f['x'][::skip, :, 0][...]
+            y = f['x'][::skip, :, 1][...]
+            z = f['x'][::skip, :, 2][...]
+            vx = f['x'][::skip, :, 3][...]
+            vy = f['x'][::skip, :, 4][...]
+            vz = f['x'][::skip, :, 5][...]
+        elif f['x'].shape == (nt, 2, nb, 3):
+            x = f['x'][::skip, 0, :, 0][...]
+            y = f['x'][::skip, 0, :, 1][...]
+            z = f['x'][::skip, 0, :, 2][...]
+            vx = f['x'][::skip, 1, :, 0][...]
+            vy = f['x'][::skip, 1, :, 1][...]
+            vz = f['x'][::skip, 1, :, 2][...]
+        else:
+            raise RuntimeError("unknown x data shape: {0:s}"
+                               .format(str(f['x'].shape)))
 
     return t, m, x, y, z, vx, vy, vz, e
 
