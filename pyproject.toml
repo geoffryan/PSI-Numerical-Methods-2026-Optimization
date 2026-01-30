@@ -1,0 +1,21 @@
+[project]
+name = "opt"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "h5py>=3.15.1",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.1",
+]
+
+[build-system]
+requires = ["setuptools", "numpy>=2"]
+build-backend = "setuptools_wrapper"
+backend-path = ["build_tools"]
+
+[[tool.setuptools.ext-modules]]
+name = "cbody"
+sources = ["src/cbodymodule.c", "src/mycalc.c"]
+depends = ["src/mycalc.h"]
+extra-link-args = ["-O3", "-lm", "-fopenmp"]
+extra-compile-args = ["-O3", "-fopenmp"]
