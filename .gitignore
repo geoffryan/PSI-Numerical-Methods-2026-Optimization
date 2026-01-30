@@ -1,0 +1,10 @@
+*.png
+*.txt
+*.h5
+*.svg
+*.prof
+*.lprof
+*.so
+__pycache__
+*.pyc
+*.egg-info

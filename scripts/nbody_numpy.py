@@ -17,10 +17,13 @@ def evolve(t0, t1, x0, N, f, f_kwargs, filename):
 
     t = np.linspace(t0, t1, N+1)
 
+    """
     with open(filename, "a") as outfile:
         en = calc_energy(x0, **f_kwargs)
         str_x = " ".join(["{0:e}".format(xi) for xi in x0])
         outfile.write("{0:d} {1:e} {2:e} {3:s}\n".format(0, t0, en, str_x))
+
+    """
 
     x = x0.copy()
 
@@ -28,39 +31,30 @@ def evolve(t0, t1, x0, N, f, f_kwargs, filename):
         dt = t[i+1] - t[i]
         print(i, t[i], dt)
         x = rk4_step(t, x, dt, f, f_kwargs)
+        """
         with open(filename, "a") as outfile:
             en = calc_energy(x, **f_kwargs)
             str_x = " ".join(["{0:e}".format(xi) for xi in x])
             outfile.write("{0:d} {1:e} {2:e} {3:s}\n"
                           .format(i, t[i+1], en, str_x))
+        """
 
 
 @profile
 def f_nbody(t, x, m=None, eps_soft=None):
 
-    n = len(x) // 6
-
     xdot = np.zeros_like(x)
 
-    for i in range(n):
-        ri = x[6*i:6*i+3]
-        vi = x[6*i+3:6*i+6]
+    dr = x[None, :, :3] - x[:, None, :3]
 
-        xdot[6*i:6*i+3] = vi
+    r2 = (dr**2).sum(axis=2) + eps_soft**2
 
-        for j in range(n):
-            if i == j:
-                continue
+    r = np.sqrt(r2)
 
-            rj = x[6*j:6*j+3]
+    g = ((m[None, :] / (r**3))[:, :, None] * dr).sum(axis=1)
 
-            dr = rj - ri
-            r2 = dr[0]**2 + dr[1]**2 + dr[2]**2 + eps_soft**2
-            r = np.sqrt(r2)
-
-            g = m[j] * dr / (r**3)
-
-            xdot[6*i+3:6*i+6] += g
+    xdot[:, :3] = x[:, 3:]
+    xdot[:, 3:] = g
 
     return xdot
 
@@ -122,15 +116,14 @@ def main(tMax, Nbody, Niter):
     M, rx, ry, rz, vx, vy, vz = generate_init_disc(
             Nbody, Rmax, 0.1, Mmin, Mmax)
 
-    x0 = np.empty(6*Nbody)
+    x0 = np.empty((Nbody, 6))
 
-    for i in range(Nbody):
-        x0[6*i] = rx[i]
-        x0[6*i+1] = ry[i]
-        x0[6*i+2] = rz[i]
-        x0[6*i+3] = vx[i]
-        x0[6*i+4] = vy[i]
-        x0[6*i+5] = vz[i]
+    x0[:, 0] = rx
+    x0[:, 1] = ry
+    x0[:, 2] = rz
+    x0[:, 3] = vx
+    x0[:, 4] = vy
+    x0[:, 5] = vz
 
     kwargs = {'m': M, 'eps_soft': eps}
 
