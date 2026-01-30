@@ -44,6 +44,17 @@ Saving frame_000008.png
 - `nbody_transpose.py`: Transposes the data array to be `(6, Nbody)`, improving data locality on force calculation. About ~2x faster than `nbody_numpy`. For small systems (`Nbody <= 200`) file output dominates the run time.
 - `nbody_output.py`: Buffers output and writes HDF5 instead of txt. Marginal runtime improvement over `nbody_transpose`, file size halved.
 
+## Performance Metrics
+
+A single force calculation between a pair of bodies requires as least 16 floating point operations (including a division and square root).  To compute the full force on all N bodies requires N(N-1)/2 force calculations.  An RK4 step requires these forces to be computed 4 times. A full RK4 timestep then contains 4 x 16 x N(N-1)/2 ~32N<sup>2</sup> floating point ops. If operations can be scheduled once per clock cycle, a 4GHz CPU *should* be able to complete an RK4 timestep in ~8 N<sup>2</sup> ns.
+
+Timing on an Apple M2 Max (~3.7 GHz)
+
+|Code Version|N=16|N=128|N=1024|N=8192|
+|------------|----|-----|------|------|
+|`nbody_basic.py` | 3.4 ms | 140 ms | 91 s | 
+|Theoretical Target| 2.0 $\mu$s | 131 $\mu$s | 8.4 ms | 537 ms |
+
 ## Profiling a code with `cProfile`
 
 cProfile is built in to Python and will profile a whole program.  The signature is: `python -m cProfile -o OUTPUT_FILE SCRIPT_NAME SCRIPT_ARGS...`
