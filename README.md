@@ -57,7 +57,7 @@ Timing of one RK4 step on an Apple M2 Max (~3.7 GHz).  For each value I timed th
 |`nbody_numpy.py` | 196 μs | 2.9 ms | 179 ms | 14 s |
 |`nbody_transpose.py` | 169 μs | 1.2 ms | 70 ms | 6.0 s |
 |`nbody_output.py` | 117 μs | 943 μs | 68 ms | 6.0 s |
-|`nbody_cext.py`  | 63 μs  | 215 υs | 8.9 ms | 552 ms |
+|`nbody_cext.py`  | 63 μs  | 215 μs | 8.9 ms | 552 ms |
 |Theoretical Target| 2.0 μs | 131 μs | 8.4 ms | 537 ms |
 
 ## Profiling a code with `cProfile`
