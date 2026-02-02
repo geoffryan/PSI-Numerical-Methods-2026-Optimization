@@ -86,9 +86,9 @@ def make_the_plots(filename, skip):
 
         ms = m * nb
 
-        ax[0, 0].scatter(x[i, :], y[i, :], s=ms)
-        ax[1, 0].scatter(x[i, :], z[i, :], s=ms)
-        ax[1, 1].scatter(y[i, :], z[i, :], s=ms)
+        ax[0, 0].scatter(x[i, :], y[i, :], s=ms, alpha=0.1)
+        ax[1, 0].scatter(x[i, :], z[i, :], s=ms, alpha=0.1)
+        ax[1, 1].scatter(y[i, :], z[i, :], s=ms, alpha=0.1)
         ax[0, 1].plot(t[:], e[:])
         ax[0, 1].plot(t[i], e[i], '.')
 

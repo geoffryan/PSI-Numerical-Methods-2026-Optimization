@@ -49,7 +49,9 @@ Saving frame_000008.png
 
 A single force calculation between a pair of bodies requires as least 16 floating point operations (including a division and square root).  To compute the full force on all N bodies requires N(N-1)/2 force calculations.  An RK4 step requires these forces to be computed 4 times. A full RK4 timestep then contains 4 x 16 x N(N-1)/2 ~32N<sup>2</sup> floating point ops. If operations can be scheduled once per clock cycle, a 4GHz CPU *should* be able to complete an RK4 timestep in ~8 N<sup>2</sup> ns.
 
-Timing of one RK4 step on an Apple M2 Max (~3.7 GHz).  For each value I timed the execution of the whole program and divided by the number of steps. Number of steps was chosen so each run took several seconds, and varied from 1 to 100 000. 
+This is a *very rough* theoretical target, ignoring memory load times, SIMD, multiple dispatch, and a host of other features and complications of modern CPUs.
+
+Timing of one RK4 step on an Apple M2 Max (~3.7 GHz).  For each value I timed the execution of the whole program and divided by the number of steps. Number of steps was chosen so each run took several seconds, and varied from 1 (for the basic N=8192 case) to 100 000 (for the N=16 cases). 
 
 |Code Version     |N=16    |N=128   |N=1024 |N=8192 |
 |-----------------|--------|--------|-------|-------|
