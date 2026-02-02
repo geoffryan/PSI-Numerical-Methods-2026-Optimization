@@ -45,6 +45,10 @@ Saving frame_000008.png
 - `nbody_output.py`: Buffers output and writes HDF5 instead of txt. Marginal runtime improvement over `nbody_transpose`, file size halved.
 - `nbody_cext.py`: Performs the force and energy calculations in a C extension `cbody` (located in `src`, compile with `uv sync --reinstall`). 2x-10x faster than `nbody_output` depending in problem size, matches _rough_ theoretical expectation for single core performance.
 
+## Building `cbody`
+
+The C-extension `cbody` must be compiled into a Python module before it can be called.  In `uv` this will happen when you run `uv run` for the first time, and you can trigger again with `uv sync --reinstall`.  Otherwise it can be build with `pip install -e .` or equivalent `conda` commands. The last `.` in that command is important!
+
 ## Performance Metrics
 
 A single force calculation between a pair of bodies requires as least 16 floating point operations (including a division and square root).  To compute the full force on all N bodies requires N(N-1)/2 force calculations.  An RK4 step requires these forces to be computed 4 times. A full RK4 timestep then contains 4 x 16 x N(N-1)/2 ~32N<sup>2</sup> floating point ops. If operations can be scheduled once per clock cycle, a 4GHz CPU *should* be able to complete an RK4 timestep in ~8 N<sup>2</sup> ns.
